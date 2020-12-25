@@ -12,6 +12,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.MatchQueryBuilder;
@@ -19,6 +20,8 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -102,6 +105,61 @@ public class ContentService {
         }
         System.out.println(!success);
         return !success;
+    }
+
+    //获取ES数据,实现搜索功能
+    public List<Map<String,Object>> searchHighLight(String keyword,Integer pageNO,Integer pageSize) throws Exception {
+        if (pageNO<=1){pageNO=1;}
+
+        //条件搜索
+        SearchRequest searchRequest=new SearchRequest(ElasticSearchConstant.JD_INDEX);
+        SearchSourceBuilder sourceBuilder=new SearchSourceBuilder();
+
+        //分页
+        sourceBuilder.from(pageNO);
+        sourceBuilder.size(pageSize);
+
+        //精准匹配
+        TermQueryBuilder termQueryBuilder= QueryBuilders.termQuery("title",keyword);
+        //匹配查询
+        MatchQueryBuilder title = QueryBuilders.matchQuery("title", keyword);
+        //构建查询
+        sourceBuilder.query(title);
+        sourceBuilder.timeout(new TimeValue(60, TimeUnit.SECONDS));
+        //高亮显示功能
+        HighlightBuilder highlightBuilder = new HighlightBuilder();
+        highlightBuilder.field("title"); //高亮字段
+        highlightBuilder.requireFieldMatch(false);  //多个字段高亮
+        highlightBuilder.preTags("<span style='color:red'>");  //前缀标签
+        highlightBuilder.postTags("</span>");  //后缀标签
+        sourceBuilder.highlighter(highlightBuilder);
+
+        //执行搜索
+        searchRequest.source(sourceBuilder);
+        SearchResponse searchResponse= restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+
+        //解析结果
+        ArrayList<Map<String,Object>> list=new ArrayList<>();
+        for (SearchHit hit : searchResponse.getHits().getHits()) {
+            //获取高亮的字段
+            Map<String, HighlightField> highlightFields = hit.getHighlightFields();
+            HighlightField title1 = highlightFields.get("title");
+            Map<String, Object> sourceAsMap = hit.getSourceAsMap();  //原来的结果
+
+            //解析高亮的字段,将原来的字段换为我们高亮的字段即可
+            if (title1!=null){
+                //若高亮字段存在，则替换原来的结果:sourceAsMap
+                Text[] fragments = title1.fragments();
+                String new_title="";
+                for (Text text:fragments) {
+                    new_title+=text;
+                }
+                sourceAsMap.put("title",new_title);  //高亮字段替换掉原来的字段即可
+            }
+            //封装结果
+            list.add(hit.getSourceAsMap());
+        }
+        return list;
     }
 
     //获取ES数据,实现搜索功能

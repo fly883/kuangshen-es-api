@@ -36,8 +36,12 @@ public class ContentController {
                                            @PathVariable("pageSize") Integer pageSize) throws Exception {
         if (pageNO==null){ pageNO=1; }
         if (pageSize==null){ pageSize=50; }
-        return contentService.search(keyword,pageNO,pageSize);
+        //实现搜索功能
+        //return contentService.search(keyword,pageNO,pageSize);
+        //实现搜索高亮显示功能
+        return contentService.searchHighLight(keyword,pageNO,pageSize);
     }
+
 
 
 }
