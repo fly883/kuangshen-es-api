@@ -15,7 +15,7 @@ import java.util.List;
 public class HtmlParseUtil {
     //测试
     /*public static void main(String[] args) throws Exception {
-        new HtmlParseUtil().parseDJ("JAVA").forEach(System.out::println);
+        new HtmlParseUtil().parseDJ("java").forEach(System.out::println);
     }*/
 
     public List<Content> parseDJ(String keyword ) throws Exception {
@@ -43,6 +43,9 @@ public class HtmlParseUtil {
             String name = el.getElementsByClass("p-bi-name").eq(0).text();
             String store = el.getElementsByClass("p-bi-store").eq(0).text();
             String date = el.getElementsByClass("p-bi-date").eq(0).text();
+            String shop = el.getElementsByClass("hd-shopname").eq(0).text();
+            String icons = el.getElementsByClass("p-icons").eq(0).text();
+            String commit = el.getElementsByClass("p-commit").eq(0).text();
 
             System.out.println("===============================");
             System.out.println(img);
@@ -51,6 +54,9 @@ public class HtmlParseUtil {
             System.out.println(name);
             System.out.println(store);
             System.out.println(date);
+            System.out.println(shop);
+            System.out.println(icons);
+            System.out.println(commit);
 
             //填充结果
             Content content=new Content();
@@ -60,6 +66,9 @@ public class HtmlParseUtil {
             content.setName(name);
             content.setStore(store);
             content.setDate(date);
+            content.setShop(shop);
+            content.setIcons(icons);
+            content.setCommit(commit);
             goodsList.add(content);
         }
         return goodsList;

@@ -21,7 +21,13 @@ public class Content {
     private String price;
     //出版社
     private String store;
+    //商店
+    private String shop;
     //日期
     private String date;
+    //物流
+    private String icons;
+    //评论
+    private String commit;
 
 }
